@@ -1,0 +1,37 @@
+name: elecnor--bid-comparator
+version: 1.0.0
+description: AI-powered technical and commercial offer comparison for faster decision-making.
+author: ENCAMINA, S.L.
+
+targets:
+  - claude
+  - copilot
+  - vscode
+
+devDependencies:
+  apm:
+    # Skills
+
+    ## Developer workflow, architecture, documentation grounding
+    - github/awesome-copilot/skills/azure-well-architected-review#5c1ce5f3bd3dbc305085a4de7884a9a4f541aef3
+    - github/awesome-copilot/skills/cloud-design-patterns#f8c2b3214033a1b6134bce9129b59cc5b0440b66
+    - github/awesome-copilot/skills/git-commit#e24be77e6f203409cf99ab7d5a67e1540cb386d3
+    - github/awesome-copilot/skills/microsoft-docs#fb4eb04fcbd30de50052b1155d81167393dfb5aa
+    - github/awesome-copilot/skills/microsoft-code-reference#822d0407def3f01367d09ce35855eb6d8e3ace7c
+
+    ## Frontend development
+
+    # Agents
+    - github/awesome-copilot/agents/expert-react-frontend-engineer.agent.md#86adaa48fe3f8e9e0372cd5b18c52e5bb58f156b
+    - github/awesome-copilot/agents/Thinking-Beast-Mode.agent.md#9505d750de4c039ef7a9166f440a8e3ef12e2efa
+
+  mcp:
+    # Current Microsoft documentation and code samples; no authentication required.
+    - name: microsoft-learn
+      registry: false
+      transport: http
+      url: https://learn.microsoft.com/api/mcp
+
+includes: auto
+
+scripts: []
