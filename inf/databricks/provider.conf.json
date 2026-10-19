@@ -1,0 +1,8 @@
+{
+  "resource_group_name": "${TFSTATE_RESOURCE_GROUP_NAME}",
+  "storage_account_name": "${TFSTATE_STORAGE_ACCOUNT_NAME}",
+  "container_name": "${TFSTATE_CONTAINER_NAME}",
+  "key": "${AZURE_ENV_NAME}/databricks.tfstate",
+  "subscription_id": "${AZURE_SUBSCRIPTION_ID}",
+  "use_azuread_auth": true
+}

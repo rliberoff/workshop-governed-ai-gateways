@@ -1,0 +1,6 @@
+// Gateway responses per subscription and status code in the last hour: 200 allowed, 401 without a valid key,
+// 403 blocked by content safety or token quota, 429 token rate exceeded, 503 backend circuit open.
+ApiManagementGatewayLogs
+| where TimeGenerated > ago(1h)
+| summarize Requests = count() by ApimSubscriptionId, ResponseCode, LastErrorReason
+| order by ApimSubscriptionId asc, ResponseCode asc

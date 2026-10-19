@@ -1,1 +1,24 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
 name: governed-ai-gateways
+
+# Terraform layers are opaque to azd dependency inference, so every dependency is declared with dependsOn.
+infra:
+  provider: terraform
+  layers:
+    # Stage 1: remote state storage. Its own state stays local, inside the ignored .azure folder.
+    - name: backend
+      path: ./inf/backend
+
+      # Stage 2: Foundry, Content Safety, API Management and observability.
+    - name: resources
+      path: ./inf/resources
+      dependsOn:
+        - backend
+
+    # Stage 3: Azure Databricks with Unity Gateway in front of the same Foundry deployment.
+    # Provision it explicitly with 'azd provision databricks'.
+    - name: databricks
+      path: ./inf/databricks
+      dependsOn:
+        - resources

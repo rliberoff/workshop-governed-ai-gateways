@@ -1,6 +1,6 @@
-name: elecnor--bid-comparator
+name: governed-ai-gateways
 version: 1.0.0
-description: AI-powered technical and commercial offer comparison for faster decision-making.
+description: Hands-on workshop on governed AI with AI gateways using Azure API Management, Microsoft Foundry and Databricks.
 author: ENCAMINA, S.L.
 
 targets:
