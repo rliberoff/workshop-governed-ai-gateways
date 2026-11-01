@@ -17,3 +17,9 @@ All notable changes to this project are documented in this file. The format is b
 ### Changed
 
 - `AGENTS.md`, `apm.yml` and `azure.yaml` now describe this workshop instead of the template project.
+
+### Fixed
+
+- Lab 5 red teaming no longer counts throttled, quota-exhausted or failed calls as defended attacks: only content filter blocks (`400` with `content_filter`, or the `403` of `llm-content-safety`) count as defenses, `429` responses are retried after `retry-after`, and attacks that still get no answer stay out of the ASR.
+- Lab 5 evaluations no longer score the text of HTTP errors: throttled calls are retried and unanswered queries are excluded from the evaluation run.
+- The system prompt and application scenario of lab 5 now cover how the company governs generative AI, the subject of the evaluation dataset, so the assistant no longer has a reason to refuse the dataset questions.

@@ -16,7 +16,7 @@ from openai.types.evals.create_eval_jsonl_run_data_source_param import (
     SourceFileContentContent,
 )
 
-from workshop.chat import chat
+from workshop.chat import chat_with_retry
 from workshop.clients import apim_client, credential
 from workshop.config import Settings, load_settings
 from workshop.lab05_red_teaming import SYSTEM_PROMPT
@@ -28,14 +28,20 @@ def load_dataset() -> list[dict[str, str]]:
 
 
 def generate_answers(settings: Settings, product: str) -> list[dict[str, str]]:
-    """Answer every query through the governed path, as the production application would."""
+    """Answer every query through the governed path, as the production application would.
+
+    Only the queries that the model answered are returned: the text of an HTTP error is not an answer, and scoring
+    it would distort every evaluator. Throttled calls are waited out before giving up on a query.
+    """
     client = apim_client(settings, product)
     items = []
     for row in load_dataset():
-        result = chat(client, settings, row["query"], gateway="apim", system=SYSTEM_PROMPT)
-        response = result.text if result.ok else f"Error HTTP {result.status_code}"
+        result = chat_with_retry(client, settings, row["query"], gateway="apim", system=SYSTEM_PROMPT)
+        if not result.ok:
+            print(f"- {row['query']} -> HTTP {result.status_code}: sin respuesta, se excluye de la evaluación")
+            continue
         print(f"- {row['query']} -> HTTP {result.status_code}")
-        items.append({"query": row["query"], "response": response, "ground_truth": row["ground_truth"]})
+        items.append({"query": row["query"], "response": result.text, "ground_truth": row["ground_truth"]})
     return items
 
 
@@ -76,6 +82,9 @@ def evaluate(product: str) -> None:
     settings = load_settings()
     print("Generando respuestas a través del gateway:\n")
     items = generate_answers(settings, product)
+    if not items:
+        raise RuntimeError("No query of the dataset got an answer through the gateway; there is nothing to evaluate.")
+    print(f"\nSe evalúan {len(items)} de {len(load_dataset())} preguntas.")
 
     with (
         AIProjectClient(endpoint=settings.foundry_project_endpoint, credential=credential()) as project,

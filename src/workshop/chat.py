@@ -28,6 +28,9 @@ GOVERNANCE_HEADERS = (
     "retry-after",
 )
 
+# Longest wait between two attempts of a throttled call, whatever retry-after asks for.
+MAX_RETRY_WAIT_SECONDS = 60
+
 
 @dataclass
 class ChatResult:
@@ -133,6 +136,43 @@ def chat(
             headers=_governance_headers(raw.headers),
             trace_id=trace_id,
         )
+
+
+def _retry_wait_seconds(result: ChatResult, attempt: int) -> float:
+    """Seconds to wait before retrying a throttled call: retry-after when present, exponential otherwise."""
+    try:
+        wait = float(result.headers["retry-after"])
+    except (KeyError, ValueError):
+        wait = 2.0 ** (attempt + 1)
+    return min(max(wait, 1.0), MAX_RETRY_WAIT_SECONDS)
+
+
+def chat_with_retry(
+    client: OpenAI,
+    settings: Settings,
+    prompt: str,
+    *,
+    gateway: str,
+    system: str | None = None,
+    attempts: int = 5,
+) -> ChatResult:
+    """Send one chat completion request and repeat it while a token rate limit answers 429.
+
+    The burst commands call chat() directly so that every 429 is visible. Evaluations and AI red teaming measure
+    what the model answers, so they wait out the throttling instead of taking a 429 as a result. Any other status,
+    including the 403 of an exhausted token quota, is returned as it is.
+    """
+
+    def send() -> ChatResult:
+        return chat(client, settings, prompt, gateway=gateway, system=system)
+
+    result = send()
+    for attempt in range(1, attempts):
+        if result.status_code != 429:
+            break
+        time.sleep(_retry_wait_seconds(result, attempt))
+        result = send()
+    return result
 
 
 def describe(result: ChatResult, *, max_text: int = 300) -> str:
