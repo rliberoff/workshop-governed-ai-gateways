@@ -4,8 +4,10 @@ Duración: 10 minutos. Este cierre une lo que has construido y lo proyecta hacia
 
 ## Lo que has construido
 
+### Consumo gobernado
+
 ```mermaid
-flowchart TB
+flowchart LR
     subgraph consumers["Consumidores"]
         app["Aplicaciones y agentes"]
         fapp["Proyectos de Foundry"]
@@ -22,22 +24,68 @@ flowchart TB
 
     subgraph platform["Microsoft Foundry"]
         model["Despliegues de modelos"]
-        quality["Evaluaciones y AI Red Teaming"]
-    end
-
-    subgraph observability["Observabilidad"]
-        azmon["Log Analytics y Application Insights"]
-        uctrace["Inference tables y tabla<br/>unificada de trazas OTel"]
     end
 
     app --> api --> model
     fapp --> fgw --> model
     data --> ugw --> model
-    apim --> azmon
-    ugw --> uctrace
-    app -. "traceparent" .-> azmon
-    quality -. "antes y durante producción" .-> model
+
+    classDef consumer fill:#f1f5f9,stroke:#64748b,color:#0f172a
+    classDef azureGateway fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef unityGateway fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef foundry fill:#dcfce7,stroke:#16a34a,color:#14532d
+    class app,fapp,data consumer
+    class api,fgw azureGateway
+    class ugw unityGateway
+    class model foundry
+    style consumers fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+    style gateways fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+    style apim fill:#eff6ff,stroke:#2563eb,color:#1e3a8a
+    style platform fill:#f0fdf4,stroke:#16a34a,color:#14532d
 ```
+
+Los tres recorridos llegan a los mismos despliegues. Azul: API Management; ámbar: Unity Gateway; verde: modelos en Foundry.
+
+### Observabilidad y evaluación
+
+```mermaid
+flowchart LR
+    app["Aplicaciones y agentes"]
+    apim["Azure API Management<br/>corporativo"]
+    ugw["Databricks Unity Gateway"]
+
+    subgraph observability["Observabilidad"]
+        azmon["Log Analytics y<br/>Application Insights"]
+        uctrace["Inference tables y tabla<br/>unificada de trazas OTel"]
+    end
+
+    subgraph platform["Microsoft Foundry"]
+        quality["Evaluaciones y<br/>AI Red Teaming"]
+        model["Despliegues de modelos"]
+        quality -. "antes y durante producción" .-> model
+    end
+
+    apim --> azmon
+    app -. "traceparent" .-> azmon
+    ugw --> uctrace
+
+    classDef consumer fill:#f1f5f9,stroke:#64748b,color:#0f172a
+    classDef azureGateway fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef unityGateway fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef foundry fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef telemetry fill:#ccfbf1,stroke:#0d9488,color:#134e4a
+    classDef evaluation fill:#f3e8ff,stroke:#9333ea,color:#581c87
+    class app consumer
+    class apim azureGateway
+    class ugw unityGateway
+    class model foundry
+    class azmon,uctrace telemetry
+    class quality evaluation
+    style observability fill:#f0fdfa,stroke:#0d9488,color:#134e4a
+    style platform fill:#f0fdf4,stroke:#16a34a,color:#14532d
+```
+
+Turquesa: telemetría; violeta: evaluación. Esta vista separa los flujos de observabilidad y evaluación de las llamadas a los modelos.
 
 Cuatro propiedades resumen el taller:
 
@@ -67,6 +115,28 @@ Cuatro propiedades resumen el taller:
 | Datos registrados | Métricas de tokens y registros sin cuerpos | Retención y acceso restringido; registro de contenido solo con enmascaramiento según la clasificación de los datos |
 | Calidad y seguridad | Ejecuciones manuales | Evaluaciones y Red Teaming en CI/CD, evaluación continua y umbrales de salida |
 | Cambios | `azd provision` local | Pipelines con revisión de pull requests y entornos separados |
+
+## Despliegue de la arquitectura
+
+Autentícate con Azure CLI y crea o selecciona tu entorno de `azd` siguiendo [la guía de preparación](00-preparacion.md). Despliega las capas base en orden y revisa cada vista previa antes de aplicar los cambios:
+
+```powershell
+azd provision backend --preview
+azd provision backend
+azd provision resources --preview
+azd provision resources
+```
+
+La capa `backend` prepara el estado remoto de Terraform. La capa `resources` despliega Foundry, API Management y los recursos de observabilidad.
+
+Para incluir Unity Gateway y el recorrido desde Databricks, despliega también la capa opcional después de `resources`:
+
+```powershell
+azd provision databricks --preview
+azd provision databricks
+```
+
+Despliega solo en tu entorno DEV aislado. Nombra siempre la capa: `azd provision` sin argumento incluye también Databricks.
 
 ## Limpieza
 

@@ -1,5 +1,5 @@
 lockfile_version: '1'
-apm_version: 0.33.0
+apm_version: 0.35.0
 dependencies:
 - repo_url: github/awesome-copilot
   name: awesome-copilot-Thinking-Beast-Mode
@@ -185,6 +185,24 @@ deployments:
   - github/awesome-copilot/agents/expert-react-frontend-engineer.agent.md
   active_owner: github/awesome-copilot/agents/expert-react-frontend-engineer.agent.md
   content_hash: sha256:e2c4dd071889ecda11cfba30895e153d6cc10193caf125e683634828985159a8
+- kind: project-relative
+  target: claude
+  value: .claude/rules/wow-follow-up-question.md
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:0636f0f44725ba29a4ccc3266cb2a643250a4be3818f53e9383f58cdea5ea3a7
+- kind: project-relative
+  target: claude
+  value: .claude/rules/wow-no-dummy-no-placholder-code.md
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:82c78f9a235cb87474495ae080dbbb65a2acf1021e8c20d286fb544dcd345c0b
 - kind: project-relative
   target: claude
   value: .claude/skills/azure-well-architected-review
@@ -565,6 +583,78 @@ deployments:
   content_hash: sha256:813a3f2ffea552cd1f599087d876784066c54d481297423808ebb856c3b32481
 - kind: project-relative
   target: copilot
+  value: .agents/skills/coding-style-markdown
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: null
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/coding-style-markdown/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:b29ba1e21760e39d21dcced17ad62f39f6532615d630ee9cc23bcde20d3bc205
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/coding-style-terraform-azure
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: null
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/coding-style-terraform-azure/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:5c4da1c8dc129d1afc623cf715235e7701b34aa9ca17a1e53a054cf70e184604
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/coding-style-terraform-azure/references/app-configuration.md
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:2f4e4d2dcf7381ce6eeb481f6072f158cd99b841d50f7878618ad38dc991212b
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/coding-style-terraform-azure/references/azapi-provider.md
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:03c5087eab60c72a5e923b1290f3c26172844b06e879afdb4da888ed4ab57a72
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/coding-style-terraform-azure/references/file-based-seeding.md
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:97957a6bd0eb6404fc0eb4a95bb8f58446eece9a0cea861b3c67526ce1a1c837
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/coding-style-terraform-azure/references/validation-patterns.md
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:aac9566d9ffb8d2ce0badab0e987712ef196e5d3bbcd130cb49e80bb540574b3
+- kind: project-relative
+  target: copilot
   value: .agents/skills/git-commit
   runtime: null
   scope: project
@@ -619,6 +709,24 @@ deployments:
   content_hash: sha256:2c2e0b361eab0d0f2526cf8c3c5df63b996fcdd4c12ffccdccf08f8f8f1f1f9c
 - kind: project-relative
   target: copilot
+  value: .agents/skills/wow-conventional-commits
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: null
+- kind: project-relative
+  target: copilot
+  value: .agents/skills/wow-conventional-commits/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:4e412df26759976680065bfdfce2781fb9344819a92cf2230d1b4422ff94fefa
+- kind: project-relative
+  target: copilot
   value: .github/agents/Thinking-Beast-Mode.agent.md
   runtime: null
   scope: project
@@ -636,104 +744,23 @@ deployments:
   active_owner: github/awesome-copilot/agents/expert-react-frontend-engineer.agent.md
   content_hash: sha256:e2c4dd071889ecda11cfba30895e153d6cc10193caf125e683634828985159a8
 - kind: project-relative
-  target: legacy
-  value: .agents/skills/coding-style-markdown
+  target: copilot
+  value: .github/instructions/wow-follow-up-question.instructions.md
   runtime: null
   scope: project
   owners:
   - .
   active_owner: .
-  content_hash: null
+  content_hash: sha256:fa0abd334411e72116e99faef7a16b699ee3f4272c308e3c3c45cd636007b397
 - kind: project-relative
-  target: legacy
-  value: .agents/skills/coding-style-markdown/SKILL.md
+  target: copilot
+  value: .github/instructions/wow-no-dummy-no-placholder-code.instructions.md
   runtime: null
   scope: project
   owners:
   - .
   active_owner: .
-  content_hash: sha256:b29ba1e21760e39d21dcced17ad62f39f6532615d630ee9cc23bcde20d3bc205
-- kind: project-relative
-  target: legacy
-  value: .agents/skills/coding-style-terraform-azure
-  runtime: null
-  scope: project
-  owners:
-  - .
-  active_owner: .
-  content_hash: null
-- kind: project-relative
-  target: legacy
-  value: .agents/skills/coding-style-terraform-azure/SKILL.md
-  runtime: null
-  scope: project
-  owners:
-  - .
-  active_owner: .
-  content_hash: sha256:5c4da1c8dc129d1afc623cf715235e7701b34aa9ca17a1e53a054cf70e184604
-- kind: project-relative
-  target: legacy
-  value: .agents/skills/coding-style-terraform-azure/references/app-configuration.md
-  runtime: null
-  scope: project
-  owners:
-  - .
-  active_owner: .
-  content_hash: sha256:2f4e4d2dcf7381ce6eeb481f6072f158cd99b841d50f7878618ad38dc991212b
-- kind: project-relative
-  target: legacy
-  value: .agents/skills/coding-style-terraform-azure/references/azapi-provider.md
-  runtime: null
-  scope: project
-  owners:
-  - .
-  active_owner: .
-  content_hash: sha256:03c5087eab60c72a5e923b1290f3c26172844b06e879afdb4da888ed4ab57a72
-- kind: project-relative
-  target: legacy
-  value: .agents/skills/coding-style-terraform-azure/references/file-based-seeding.md
-  runtime: null
-  scope: project
-  owners:
-  - .
-  active_owner: .
-  content_hash: sha256:97957a6bd0eb6404fc0eb4a95bb8f58446eece9a0cea861b3c67526ce1a1c837
-- kind: project-relative
-  target: legacy
-  value: .agents/skills/coding-style-terraform-azure/references/validation-patterns.md
-  runtime: null
-  scope: project
-  owners:
-  - .
-  active_owner: .
-  content_hash: sha256:aac9566d9ffb8d2ce0badab0e987712ef196e5d3bbcd130cb49e80bb540574b3
-- kind: project-relative
-  target: legacy
-  value: .agents/skills/wow-conventional-commits
-  runtime: null
-  scope: project
-  owners:
-  - .
-  active_owner: .
-  content_hash: null
-- kind: project-relative
-  target: legacy
-  value: .agents/skills/wow-conventional-commits/SKILL.md
-  runtime: null
-  scope: project
-  owners:
-  - .
-  active_owner: .
-  content_hash: sha256:4e412df26759976680065bfdfce2781fb9344819a92cf2230d1b4422ff94fefa
-- kind: uri
-  target: mcp
-  value: microsoft-learn
-  runtime: claude
-  scope: project
-  owners:
-  - .
-  active_owner: .
-  content_hash: null
+  content_hash: sha256:aef222f672462b1216af48e384c8310d8465e7c8cec53792d04b8c505ec8a0ed
 - kind: uri
   target: mcp
   value: microsoft-learn
@@ -761,8 +788,6 @@ mcp_configs:
     registry: false
     url: https://learn.microsoft.com/api/mcp
 mcp_target_servers:
-  claude:
-  - microsoft-learn
   copilot:
   - microsoft-learn
   vscode:
@@ -778,6 +803,8 @@ local_deployed_files:
 - .agents/skills/coding-style-terraform-azure/references/validation-patterns.md
 - .agents/skills/wow-conventional-commits
 - .agents/skills/wow-conventional-commits/SKILL.md
+- .claude/rules/wow-follow-up-question.md
+- .claude/rules/wow-no-dummy-no-placholder-code.md
 - .claude/skills/coding-style-markdown
 - .claude/skills/coding-style-markdown/SKILL.md
 - .claude/skills/coding-style-terraform-azure
@@ -788,6 +815,8 @@ local_deployed_files:
 - .claude/skills/coding-style-terraform-azure/references/validation-patterns.md
 - .claude/skills/wow-conventional-commits
 - .claude/skills/wow-conventional-commits/SKILL.md
+- .github/instructions/wow-follow-up-question.instructions.md
+- .github/instructions/wow-no-dummy-no-placholder-code.instructions.md
 local_deployed_file_hashes:
   .agents/skills/coding-style-markdown/SKILL.md: sha256:b29ba1e21760e39d21dcced17ad62f39f6532615d630ee9cc23bcde20d3bc205
   .agents/skills/coding-style-terraform-azure/SKILL.md: sha256:5c4da1c8dc129d1afc623cf715235e7701b34aa9ca17a1e53a054cf70e184604
@@ -796,6 +825,8 @@ local_deployed_file_hashes:
   .agents/skills/coding-style-terraform-azure/references/file-based-seeding.md: sha256:97957a6bd0eb6404fc0eb4a95bb8f58446eece9a0cea861b3c67526ce1a1c837
   .agents/skills/coding-style-terraform-azure/references/validation-patterns.md: sha256:aac9566d9ffb8d2ce0badab0e987712ef196e5d3bbcd130cb49e80bb540574b3
   .agents/skills/wow-conventional-commits/SKILL.md: sha256:4e412df26759976680065bfdfce2781fb9344819a92cf2230d1b4422ff94fefa
+  .claude/rules/wow-follow-up-question.md: sha256:0636f0f44725ba29a4ccc3266cb2a643250a4be3818f53e9383f58cdea5ea3a7
+  .claude/rules/wow-no-dummy-no-placholder-code.md: sha256:82c78f9a235cb87474495ae080dbbb65a2acf1021e8c20d286fb544dcd345c0b
   .claude/skills/coding-style-markdown/SKILL.md: sha256:b29ba1e21760e39d21dcced17ad62f39f6532615d630ee9cc23bcde20d3bc205
   .claude/skills/coding-style-terraform-azure/SKILL.md: sha256:5c4da1c8dc129d1afc623cf715235e7701b34aa9ca17a1e53a054cf70e184604
   .claude/skills/coding-style-terraform-azure/references/app-configuration.md: sha256:2f4e4d2dcf7381ce6eeb481f6072f158cd99b841d50f7878618ad38dc991212b
@@ -803,3 +834,5 @@ local_deployed_file_hashes:
   .claude/skills/coding-style-terraform-azure/references/file-based-seeding.md: sha256:97957a6bd0eb6404fc0eb4a95bb8f58446eece9a0cea861b3c67526ce1a1c837
   .claude/skills/coding-style-terraform-azure/references/validation-patterns.md: sha256:aac9566d9ffb8d2ce0badab0e987712ef196e5d3bbcd130cb49e80bb540574b3
   .claude/skills/wow-conventional-commits/SKILL.md: sha256:4e412df26759976680065bfdfce2781fb9344819a92cf2230d1b4422ff94fefa
+  .github/instructions/wow-follow-up-question.instructions.md: sha256:fa0abd334411e72116e99faef7a16b699ee3f4272c308e3c3c45cd636007b397
+  .github/instructions/wow-no-dummy-no-placholder-code.instructions.md: sha256:aef222f672462b1216af48e384c8310d8465e7c8cec53792d04b8c505ec8a0ed
