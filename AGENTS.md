@@ -12,7 +12,7 @@ Apply the first source that resolves the question, and never silently override a
 | :--- | :--- | :--- |
 | 1 | A direct, explicit user directive | Overrides everything below, by rule 1 of the Copilot instructions |
 | 3 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Interaction style, language policy, code generation and modification philosophy |
-| 4 | [`.github/instructions/`](.github/instructions/) | Scoped rules, applied according to their `applyTo` glob |
+| 4 | [`.github/instructions/`](.github/instructions/) | When available, provides scoped rules, applied according to their `applyTo` glob |
 | 5 | `.agents/skills/<skill_name>/SKILL.md` | Domain conventions, applied when the skill description matches the task |
 | 6 | This file | Orientation and repository facts only |
 
