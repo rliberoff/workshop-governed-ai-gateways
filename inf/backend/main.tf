@@ -1,7 +1,7 @@
 data "azurerm_client_config" "current" {}
 
 locals {
-  # A short hash of the subscription keeps globally unique names deterministic without an extra provider.
+  # Deterministic on purpose: azd caches the state account of the other layers in their local backend config.
   name_hash = substr(sha1(var.subscription_id), 0, 6)
 
   name_resource_group  = "rg-${var.project_name}-tfstate-${var.environment_id}"

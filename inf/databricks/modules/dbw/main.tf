@@ -1,6 +1,7 @@
 locals {
   # Cognitive Services OpenAI User: inference on the Foundry model deployments, nothing else.
   role_cognitive_services_openai_user = "5e0bd9bd-7b93-4f28-af87-19fc36ad61bd"
+  role_contributor                    = "b24988ac-6180-42a0-ab88-20f7382dd24c"
 }
 
 # Premium workspace: Unity Catalog and Unity Gateway require the Premium tier. New workspaces are enabled for
@@ -17,6 +18,12 @@ resource "azurerm_databricks_workspace" "this" {
   lifecycle {
     ignore_changes = [tags]
   }
+}
+
+resource "azurerm_role_assignment" "deployer_workspace_contributor" {
+  scope              = azurerm_databricks_workspace.this.id
+  role_definition_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/${local.role_contributor}"
+  principal_id       = var.deployer_principal_id
 }
 
 # Access Connector whose managed identity backs the Unity Catalog service credential used by Unity Gateway.

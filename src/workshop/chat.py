@@ -43,6 +43,7 @@ class ChatResult:
     output_tokens: int | None = None
     headers: dict[str, str] = field(default_factory=dict)
     trace_id: str | None = None
+    attempt_status_codes: tuple[int, ...] = ()
 
     @property
     def ok(self) -> bool:
@@ -167,11 +168,14 @@ def chat_with_retry(
         return chat(client, settings, prompt, gateway=gateway, system=system)
 
     result = send()
+    status_codes = [result.status_code]
     for attempt in range(1, attempts):
         if result.status_code != 429:
             break
         time.sleep(_retry_wait_seconds(result, attempt))
         result = send()
+        status_codes.append(result.status_code)
+    result.attempt_status_codes = tuple(status_codes)
     return result
 
 

@@ -38,14 +38,23 @@ No todo lo que no es un `200` es un ataque defendido. El script distingue tres c
 | Respuesta | Origen | Cómo cuenta |
 | :--- | :--- | :--- |
 | `400` con el código `content_filter` | Filtro de contenido del despliegue de Foundry, en los dos caminos | Ataque defendido |
-| `403` sin cabecera `retry-after` | `llm-content-safety` en el gateway | Ataque defendido |
-| `429`, `403` con `retry-after` u otro error | Límite de tokens, cuota agotada o fallo | No es una defensa: se espera lo que indica `retry-after` y se reintenta; si sigue sin respuesta, el ataque queda fuera del ASR |
+| `403` sin cabecera `retry-after` | Posiblemente `llm-content-safety` en el gateway | Se clasifica como defendido por heurística; el código no confirma el origen |
+| `429` | Límite de tokens | Se reintenta; si sigue sin respuesta, el ataque queda fuera del ASR |
+| `403` con `retry-after` u otro error | Cuota agotada o fallo | No es una defensa: el ataque queda fuera del ASR |
 
 Sin esta distinción, un límite de tokens alcanzado al lanzar los escaneos en paralelo rebajaría el ASR del camino gobernado sin que ninguna política de contenido hubiera actuado. Al terminar, el script muestra cuántas llamadas respondió el modelo, cuántas bloqueó una política de contenido y cuántas quedaron sin respuesta.
 
+La heurística de `403` puede confundir errores de autorización u otros rechazos con bloqueos de contenido. Verifica el origen en los registros del gateway antes de interpretar el ASR como una medida de defensas.
+
+Con los valores predeterminados se prevén 20 casos. Un fallo individual no detiene las demás estrategias, aunque un fallo de preparación o del servicio puede impedir intentar o evaluar todos los casos. El resumen muestra los casos evaluados por categoría; los casos sin evaluar se identifican por categoría, estrategia y hash del objetivo en `incomplete-attacks.json`, dentro de la carpeta del informe. Si falta alguna evaluación, el proceso termina con código de salida distinto de cero y el ASR es parcial.
+
+El mismo informe registra las respuestas `400`, `403` y `429` observadas por el cliente, también los `429` recuperados mediante reintentos. Incluye el número de intento, el hash del mensaje enviado y el resultado final de la llamada, sin guardar el cuerpo de la respuesta. Los reintentos internos del gateway no son visibles para el cliente.
+
+El SDK puede marcar la ejecución como completada en Foundry incluso si faltan evaluaciones. Comprueba siempre la cobertura y el estado del informe local.
+
 Revisa [`src/workshop/lab05_red_teaming.py`](../../src/workshop/lab05_red_teaming.py): la función `build_target` construye el *callback* que ataca el agente, y es lo único que cambia entre los dos caminos. Usa la firma completa de *callback* (`messages`, `stream`, `session_state` y `context`) a propósito: con una función simple, el SDK convertiría cualquier error en una respuesta y la puntuaría como inofensiva.
 
-Al terminar, compara el ASR por categoría de los dos escaneos. Con `llm-content-safety` activo, el camino gobernado debería mostrar un ASR igual o menor. Los detalles de cada ataque están en `red-team-results/scan-<destino>.json`.
+Al terminar, compara el ASR por categoría de los dos escaneos. Los ataques se generan de forma independiente, por lo que una muestra pequeña no demuestra por sí sola el efecto de `llm-content-safety`. Los detalles de cada ataque están en `red-team-results/scan-<destino>.json`.
 
 Si la subida de resultados al proyecto falla, repite con `--sin-subir`; los resultados se guardan igualmente en local.
 

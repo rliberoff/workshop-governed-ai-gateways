@@ -180,8 +180,8 @@ variable "apim_products" {
     basico = {
       display_name       = "Básico"
       description        = "Consumers with a low token budget per minute and per day."
-      tokens_per_minute  = 5000
-      token_quota        = 20000
+      tokens_per_minute  = 1000
+      token_quota        = 5000
       token_quota_period = "Daily"
     }
     premium = {

@@ -34,7 +34,7 @@ CHAT_COMPLETIONS_SUFFIX = "/chat/completions"
 
 APIM_ID_PATTERN = re.compile(
     r"^/subscriptions/(?P<subscription>[^/]+)/resourceGroups/(?P<group>[^/]+)"
-    r"/providers/Microsoft\.ApiManagement/service/(?P<service>[^/]+)(?:/products/(?P<product>[^/]+))?$",
+    r"/providers/Microsoft\.ApiManagement/service/(?P<service>[^/]+)(?:/products/(?P<product>[^/]+))?/?$",
     re.IGNORECASE,
 )
 
@@ -92,6 +92,10 @@ def _chat_operation(operations) -> tuple[str, str | None]:
         and operation.url_template.split("?")[0].rstrip("/").endswith(CHAT_COMPLETIONS_SUFFIX)
     ]
     if not candidates:
+        if any(
+            (operation.method or "").upper() == "POST" and operation.url_template == "/*" for operation in operations
+        ):
+            return "/openai/v1/chat/completions", None
         raise RuntimeError("The AI Gateway shared API exposes no POST .../chat/completions operation.")
 
     candidates.sort(key=lambda operation: "{" in operation.url_template.split("?")[0])
@@ -140,7 +144,7 @@ def discover(settings: Settings, mode: str) -> GatewayArtifacts:
     apis = list(management.product_api.list_by_product(group, service, product))
     if not apis:
         raise RuntimeError(f"Product '{product}' has no API associated yet; wait a few minutes and retry.")
-    api = apis[0]
+    api = management.api.get(group, service, apis[0].name)
 
     operations = list(management.api_operation.list_by_api(group, service, api.name))
     url_template, api_version = _chat_operation(operations)

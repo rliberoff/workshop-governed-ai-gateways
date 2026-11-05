@@ -2,7 +2,7 @@
 
 output "DATABRICKS_RESOURCE_GROUP" {
   description = "Name of the resource group of the Databricks workspace."
-  value       = azurerm_resource_group.this.name
+  value       = data.azurerm_resource_group.this.name
 }
 
 output "DATABRICKS_WORKSPACE_URL" {

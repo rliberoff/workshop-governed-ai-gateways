@@ -17,13 +17,15 @@ Taller introductorio de 180 minutos para perfiles de desarrollo, arquitectura y 
 - Confirma la región. Se propone `swedencentral`; esta región admite el modelo, las evaluaciones, el AI Red Teaming Agent, Unity Gateway y los modelos externos de Databricks. Hay más regiones disponibles según la documentación de cada servicio.
 - Confirma que cada asistente tendrá una suscripción con rol Owner o equivalente y cuota de `gpt-6-luna`. Si comparten suscripción, cada uno necesita un identificador de entorno distinto y la suma de cuotas debe caber: 60K tokens por minuto por asistente, repartidos entre sus dos cuentas de Microsoft Foundry.
 - Para el laboratorio opcional de Databricks, confirma con el administrador de la cuenta de Databricks que los workspaces nuevos reciben Unity Catalog automáticamente y que los administradores de workspace no están restringidos.
+- Para una primera instalación sin metastore, completa la [preparación desde cero del laboratorio 6](labs/lab-06-unity-gateway.md#preparación-desde-cero-sin-metastore-previo): creación inicial, asignación de Metastore admin, acceso SQL, permisos de uso y configuración de trazas. No presupongas que todo ello se configura al desplegar el workspace.
 - Envía a los asistentes la [guía de preparación](00-preparacion.md) y pídeles que desplieguen la víspera.
 
 ### El día anterior
 
 - Despliega tu entorno completo, incluida la capa `databricks`, y ejecuta todos los laboratorios una vez, incluidos los dos modos del AI Gateway de Microsoft Foundry del laboratorio 3. Anota cuánto tarda Microsoft Foundry en crear la instancia del modo independiente y dónde la crea: así sabrás qué decir a los asistentes.
+- Si has destruido y recreado la infraestructura, completa el [procedimiento de recuperación del laboratorio 6](labs/lab-06-unity-gateway.md#recuperar-el-laboratorio-tras-recrear-la-infraestructura) y su checklist. Reaprovisionar el workspace no restaura por sí solo los permisos ni las trazas compartidas.
 - Deja activadas `APIM_TOKEN_LIMIT_ENABLED` y `APIM_CONTENT_SAFETY_ENABLED` en un segundo entorno de respaldo, para mostrar resultados si algo falla en directo.
-- Como administrador del metastore, configura la tabla unificada de trazas en **AI Gateway**, **Govern**, **Traces**, **Set up tracing**. Verifica que tu región dispone de Zerobus Ingest, que es requisito de esta tabla.
+- Como administrador del metastore, verifica o configura una sola vez la tabla unificada de trazas en **AI Gateway**, **Govern**, **Traces**, **Set up tracing**. Usa un catálogo y esquema fuera del ciclo de destrucción del taller y autorización para registrar todos los workspaces del metastore. Verifica que tu región dispone de Zerobus Ingest, que es requisito de esta tabla.
 - Ejecuta un escaneo de Red Teaming de cada camino y guarda los JSON para enseñarlos si el escaneo en directo tarda.
 
 ### Antes de empezar
@@ -86,7 +88,9 @@ Cuando enseñes `inspeccionar --modo integrado`, señala la lista de APIs: la de
 
 **¿Por qué usar el proveedor `azapi` en algunos recursos?** El proveedor `azurerm` no expone todavía las credenciales de identidad administrada de los backends, la propiedad `metrics` del diagnóstico de Application Insights, las métricas personalizadas con dimensiones de Application Insights ni las conexiones a nivel de proyecto de Microsoft Foundry. Cada uso del proveedor `azapi` está comentado en el código.
 
-**¿Hay que activar algo en el portal para `llm-emit-token-metric`?** No. La documentación indica activar **Custom metrics (Preview)**, **With dimensions** en Application Insights; Terraform aplica ese mismo ajuste con la propiedad `CustomMetricsOptedInType`. Puedes comprobarlo en el portal, en **Usage and estimated costs**, sin cambiar nada.
+**¿Hay que activar algo en el portal para `llm-emit-token-metric`?** No. La documentación indica activar **Custom metrics (Preview)**, **With dimensions** en Application Insights; Terraform aplica ese mismo ajuste con la propiedad `CustomMetricsOptedInType` mediante un `PUT` de `azapi_resource_action`. No se usa `azapi_update_resource` porque descarta de su petición las propiedades que no están en el esquema de AzAPI, y esta no lo está. Puedes comprobarlo en el portal, en **Usage and estimated costs**, cerrando el panel sin pulsar **OK**, porque ese botón guarda la opción marcada.
+
+**¿Qué hago si alguien cambia las métricas personalizadas desde el portal?** La vista previa de `azd provision resources` muestra un aviso del check `custom_metrics_with_dimensions`. Volver a aprovisionar no lo corrige, porque la acción solo se envía cuando cambia su configuración. Restáuralo con una ejecución manual de Terraform sobre la capa `resources`: `terraform apply -replace=module.appi.azapi_resource_action.custom_metrics_with_dimensions`. El ajuste no es retroactivo: las métricas recibidas mientras estuvo desactivado no tienen dimensiones en Azure Metric Store.
 
 **¿Por qué hay dos cuentas de Microsoft ?** Una cuenta admite un único AI Gateway. Para practicar los dos modos, la cuenta principal se asocia a la instancia de Terraform y la segunda, con sufijo `-sa`, recibe un gateway independiente. La segunda cuenta despliega el mismo modelo con solo 10K tokens por minuto.
 

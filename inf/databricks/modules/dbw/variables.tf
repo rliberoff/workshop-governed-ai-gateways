@@ -40,6 +40,17 @@ variable "foundry_account_id" {
   nullable    = false
 }
 
+variable "deployer_principal_id" {
+  description = "(Required) Microsoft Entra object ID of the Terraform caller. Receives Contributor only on this workspace to allow Databricks workspace administrator access through Azure authentication."
+  type        = string
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.deployer_principal_id))
+    error_message = "The deployer_principal_id must be a Microsoft Entra object ID GUID."
+  }
+}
+
 variable "tags" {
   description = "(Required) Tags assigned to the Databricks resources."
   type        = map(string)

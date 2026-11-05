@@ -13,6 +13,11 @@ terraform {
       source  = "azure/azapi"
       version = "~> 2.13.0"
     }
+
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.9.1"
+    }
   }
 
   # Partial configuration: azd fills it from provider.conf.json with the outputs of the backend layer.

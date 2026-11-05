@@ -22,15 +22,17 @@ Abre [`inf/resources/modules/aif/main.tf`](../../inf/resources/modules/aif/main.
 uv run python -m workshop.lab01_direct
 ```
 
-El script obtiene un token de Entra ID con tu sesión de Azure CLI y llama tres veces al endpoint OpenAI v1 de Foundry con el SDK oficial de OpenAI. Verás algo parecido a esto:
+El script obtiene un token de Entra ID con tu sesión de Azure CLI y llama tres veces al endpoint OpenAI v1 de Foundry con el SDK oficial de OpenAI. El endpoint de este laboratorio usa el dominio `services.ai.azure.com` y la ruta `/openai/v1`. Verás algo parecido a esto:
 
 ```text
-Endpoint directo: https://aif-gaig-<entorno>-<hash>.openai.azure.com/openai/v1
+Endpoint directo: https://aif-gaig-<entorno>-<sufijo>.services.ai.azure.com/openai/v1
 Modelo: gpt-6-luna
 
 [1] HTTP 200 | 1450 ms | tokens entrada=32 salida=118
     Un AI gateway es un punto de entrada centralizado...
 ```
+
+Comprueba que las tres llamadas responden HTTP 200 antes de continuar. Un HTTP 404 con `AccountNotFound` o `DeploymentNotFound` no demuestra un problema de permisos: comprueba que `FOUNDRY_OPENAI_V1_ENDPOINT` apunta al endpoint anterior y que la cuenta y el despliegue existen.
 
 ## Paso 2: revisar el código
 

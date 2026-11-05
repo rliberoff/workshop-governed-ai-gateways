@@ -1,19 +1,26 @@
 data "azurerm_client_config" "current" {}
 
+# A new suffix on every recreation keeps Azure from mapping new resources to recently purged ones: a Foundry
+# account recreated with the same subdomain can answer 404 AccountNotFound on its inference endpoints.
+resource "random_string" "suffix" {
+  length  = 6
+  upper   = false
+  special = false
+}
+
 locals {
-  # A short hash of the subscription keeps globally unique names deterministic without an extra provider.
-  name_hash   = substr(sha1(var.subscription_id), 0, 6)
-  name_suffix = "${var.project_name}-${var.environment_id}"
+  name_base   = "${var.project_name}-${var.environment_id}"
+  name_suffix = "${local.name_base}-${random_string.suffix.result}"
 
   name_resource_group  = "rg-${local.name_suffix}"
   name_log             = "log-${local.name_suffix}"
   name_appi            = "appi-${local.name_suffix}"
-  name_aif             = "aif-${local.name_suffix}-${local.name_hash}"
-  name_proj            = "proj-${local.name_suffix}"
-  name_aif_standalone  = "aif-${local.name_suffix}-sa-${local.name_hash}"
-  name_proj_standalone = "proj-${local.name_suffix}-sa"
-  name_cs              = "cs-${local.name_suffix}-${local.name_hash}"
-  name_apim            = "apim-${local.name_suffix}-${local.name_hash}"
+  name_aif             = "aif-${local.name_suffix}"
+  name_proj            = "proj-${local.name_base}"
+  name_aif_standalone  = "aif-${local.name_base}-sa-${random_string.suffix.result}"
+  name_proj_standalone = "proj-${local.name_base}-sa"
+  name_cs              = "cs-${local.name_suffix}"
+  name_apim            = "apim-${local.name_suffix}"
 
   # Base path of the governed API in API Management. Clients append /chat/completions or /responses.
   apim_api_path = "foundry/openai/v1"

@@ -35,11 +35,11 @@ El registro es idempotente; si un proveedor ya está registrado, el comando no c
 
 | Herramienta | Versión mínima | Comprobación |
 | :--- | :--- | :--- |
-| Terraform | 1.16.5 | `terraform version` |
-| Azure CLI | 2.91.0 | `az version` |
-| Azure Developer CLI | 1.36.0 | `azd version` |
+| Terraform | >= 1.16.5 | `terraform version` |
+| Azure CLI | >= 2.91.0 | `az version` |
+| Azure Developer CLI | >= 1.36.0 | `azd version` |
 | Python | 3.11 a 3.13 | `python --version` |
-| uv | 0.10 | `uv --version` |
+| uv | >= 0.10 | `uv --version` |
 | Git | Cualquiera reciente | `git --version` |
 
 Python 3.14 no es compatible todavía con PyRIT, la librería que usa el AI Red Teaming Agent. Si tienes varias versiones, `uv` elegirá una compatible.
@@ -51,6 +51,8 @@ Para hacer el laboratorio 6 por tu cuenta necesitas, además:
 - Permiso para crear un workspace de Azure Databricks **Premium** en tu suscripción
 - Que la cuenta de Databricks de tu organización asigne automáticamente Unity Catalog a los workspaces nuevos (es el comportamiento por defecto de las cuentas creadas después de noviembre de 2023)
 - Que el administrador de la cuenta no haya restringido a los administradores de workspace (`RestrictWorkspaceAdmins`)
+
+No necesitas un metastore previo para la primera instalación: sigue la [preparación desde cero del laboratorio 6](labs/lab-06-unity-gateway.md#preparación-desde-cero-sin-metastore-previo). Esa sección distingue el metastore que Databricks puede aprovisionar automáticamente de las asignaciones administrativas, el SQL warehouse y las trazas que no declara el Terraform del taller. Para preparar también la demostración del instructor hace falta un Account admin de Databricks, no solo permisos de Azure.
 
 Si no cumples alguno de estos requisitos, sigue la demostración del instructor: el código es el mismo.
 
@@ -78,7 +80,7 @@ Comprueba que el tenant y la suscripción que muestra el último comando son los
 
 ## Paso 3: crear tu entorno de azd
 
-El identificador de entorno debe ser único en la suscripción y tener entre 2 y 10 letras minúsculas o dígitos, por ejemplo tus iniciales y un número. Aparece en el nombre de todos tus recursos.
+El identificador de entorno debe ser único en la suscripción y tener entre 2 y 10 letras minúsculas o dígitos, por ejemplo tus iniciales y un número. Aparece en el nombre de todos tus recursos. En las capas `resources` y `databricks` va seguido de un sufijo aleatorio de seis caracteres que cada capa genera al crearse. El sufijo cambia cada vez que vuelves a crear una capa, para que Azure no confunda los recursos nuevos con los que acabas de borrar. El almacenamiento del estado de la capa `backend` conserva un nombre fijo.
 
 ```powershell
 $environmentId = Read-Host "Identificador de entorno (2-10 letras minúsculas o dígitos)"

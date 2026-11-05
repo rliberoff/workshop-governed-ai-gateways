@@ -22,3 +22,27 @@ infra:
       path: ./inf/databricks
       dependsOn:
         - resources
+
+hooks:
+  predown:
+    windows:
+      shell: pwsh
+      run: |
+        uv run python -m workshop.foundry_cleanup prepare
+        exit $LASTEXITCODE
+      interactive: false
+    posix:
+      shell: sh
+      run: uv run python -m workshop.foundry_cleanup prepare
+      interactive: false
+  postdown:
+    windows:
+      shell: pwsh
+      run: |
+        uv run python -m workshop.foundry_cleanup purge --execute
+        exit $LASTEXITCODE
+      interactive: false
+    posix:
+      shell: sh
+      run: uv run python -m workshop.foundry_cleanup purge --execute
+      interactive: false

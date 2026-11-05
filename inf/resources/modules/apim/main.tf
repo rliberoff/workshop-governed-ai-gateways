@@ -277,15 +277,23 @@ resource "azapi_resource_action" "azure_monitor_logger" {
 }
 
 # Azure Monitor diagnostic of the API: gateway requests, status codes and error reasons in the
-# ApiManagementGatewayLogs resource log table, without request or response bodies.
-resource "azurerm_api_management_api_diagnostic" "azure_monitor" {
-  identifier               = "azuremonitor"
-  resource_group_name      = var.resource_group_name
-  api_management_name      = azurerm_api_management.this.name
-  api_name                 = azurerm_api_management_api.foundry.name
-  api_management_logger_id = azapi_resource_action.azure_monitor_logger.id
-  sampling_percentage      = 100
-  always_log_errors        = true
-  log_client_ip            = false
-  verbosity                = "information"
+# ApiManagementGatewayLogs resource log table, without request or response bodies. AzAPI avoids
+# azurerm's operation_name_format default, which its validation rejects for azuremonitor.
+resource "azapi_resource" "api_diagnostic_azure_monitor" {
+  type      = "Microsoft.ApiManagement/service/apis/diagnostics@2024-06-01-preview"
+  name      = "azuremonitor"
+  parent_id = "${azurerm_api_management.this.id}/apis/${azurerm_api_management_api.foundry.name}"
+
+  body = {
+    properties = {
+      loggerId    = azapi_resource_action.azure_monitor_logger.id
+      alwaysLog   = "allErrors"
+      logClientIp = false
+      verbosity   = "information"
+      sampling = {
+        samplingType = "fixed"
+        percentage   = 100
+      }
+    }
+  }
 }

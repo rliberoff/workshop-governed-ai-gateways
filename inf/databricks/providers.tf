@@ -12,6 +12,11 @@ terraform {
       source  = "databricks/databricks"
       version = "~> 1.137.0"
     }
+
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.9.1"
+    }
   }
 
   # Partial configuration: azd fills it from provider.conf.json with the outputs of the backend layer.
@@ -19,7 +24,11 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  features {
+    databricks_workspace {
+      force_delete = true
+    }
+  }
 
   subscription_id = var.subscription_id
 }

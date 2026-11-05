@@ -55,7 +55,7 @@ azd provision resources --preview
 azd provision resources
 ```
 
-En la vista previa solo cambian las dos políticas de producto. El producto `basico` permite 5.000 tokens por minuto y 20.000 al día por suscripción; `premium`, 20.000 por minuto y 1.000.000 al día. Los valores están en la variable `apim_products` de [`inf/resources/variables.tf`](../../inf/resources/variables.tf).
+En la vista previa solo cambian las dos políticas de producto. El producto `basico` permite 1.000 tokens por minuto y 5.000 al día por suscripción; `premium`, 20.000 por minuto y 1.000.000 al día. Los valores están en la variable `apim_products` de [`inf/resources/variables.tf`](../../inf/resources/variables.tf).
 
 Lanza una ráfaga con cada producto:
 
@@ -79,7 +79,7 @@ Envía dos peticiones dañinas, un intento de jailbreak y una petición violenta
 uv run python -m workshop.lab02_gateway seguridad
 ```
 
-Lo habitual es que el filtro de contenido del despliegue de Foundry rechace la petición violenta con un `400` y que el modelo se niegue a seguir el jailbreak. La protección existe, pero depende de cada despliegue y la petición ya ha llegado al modelo.
+Sin la política del gateway, el filtro de contenido del despliegue de Foundry puede rechazar la petición violenta con un `400`, o el modelo puede responder con una negativa y HTTP `200`. El `400` es una posibilidad, no un resultado obligatorio. También puede negarse a seguir el *jailbreak*. La protección depende de cada despliegue y la petición ya ha llegado a Foundry.
 
 Activa `llm-content-safety`, que analiza cada prompt con Azure AI Content Safety y Prompt Shields antes de llamar al modelo:
 
@@ -89,7 +89,15 @@ azd provision resources
 uv run python -m workshop.lab02_gateway seguridad
 ```
 
-Ahora el gateway rechaza ambas peticiones con un error del propio gateway, habitualmente `403`: se bloquean antes de consumir tokens del modelo, con la misma regla para cualquier modelo detrás del gateway. Los umbrales por categoría están en la variable `apim_content_safety_thresholds`.
+Compara los resultados: Prompt Shields analiza el intento de jailbreak y el clasificador de contenido evalúa la petición violenta. No se garantiza que ambas peticiones se bloqueen. Los umbrales por categoría están en la variable `apim_content_safety_thresholds`: por defecto valen `4` en una escala de `0` a `7`, por lo que se bloquean las severidades `4` a `7` y se permiten las inferiores. Una intención dañina no implica necesariamente que el clasificador alcance ese umbral.
+
+| Resultado | Interpretación |
+| :--- | :--- |
+| `403` con `Request failed content safety check.` | El gateway bloqueó la petición antes de llamar al modelo |
+| `400` con un error de filtrado de contenido de Foundry | La petición pasó el gateway y Foundry la bloqueó |
+| `200` con una negativa del modelo | La petición pasó los filtros y el modelo respondió rechazando la solicitud; hubo consumo de tokens |
+
+Un jailbreak bloqueado con `403` y una petición violenta respondida con una negativa y `200` son compatibles con la política activa. El estado HTTP por sí solo no mide la seguridad de la respuesta. Si necesitas un filtrado más restrictivo, reduce el umbral de `Violence` en Terraform, revisa la vista previa y aprovisiona de nuevo; esto puede aumentar los falsos positivos y no garantiza el bloqueo de un texto concreto. Consulta la [referencia de `llm-content-safety`](https://learn.microsoft.com/azure/api-management/llm-content-safety-policy) para interpretar los umbrales.
 
 ## Paso 4: resiliencia
 

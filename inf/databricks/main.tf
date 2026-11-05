@@ -1,17 +1,24 @@
 data "azurerm_client_config" "current" {}
 
-locals {
-  name_suffix = "${var.project_name}-${var.environment_id}"
+# A new suffix on every recreation keeps Azure from mapping new resources to recently deleted ones.
+resource "random_string" "suffix" {
+  length  = 6
+  upper   = false
+  special = false
+}
 
-  name_resource_group = "rg-${local.name_suffix}-dbw"
-  # Underscores instead of hyphens so the workspace catalog, named after the workspace, needs no quoting in SQL.
-  name_dbw  = "dbw_${var.project_name}_${var.environment_id}"
-  name_dbac = "dbac-${local.name_suffix}"
+locals {
+  name_suffix = "${var.project_name}-${var.environment_id}-${random_string.suffix.result}"
+
+  name_managed_resource_group = "rg-${local.name_suffix}-dbw-managed"
+  name_dbw                    = "dbw-${local.name_suffix}"
+  name_dbac                   = "dbac-${local.name_suffix}"
 
   # Unity Catalog names are unique per metastore, which every workspace of the account in the region shares.
-  name_service_credential = "${var.project_name}_${var.environment_id}_foundry"
+  name_service_credential = "${var.project_name}_${var.environment_id}_${random_string.suffix.result}_foundry"
 
-  catalog_name = coalesce(var.databricks_catalog_name, local.name_dbw)
+  workspace_catalog_names = toset([replace(local.name_dbw, "-", "_"), "${replace(local.name_dbw, "-", "_")}_${module.dbw.workspace_numeric_id}"])
+  catalog_name            = var.databricks_catalog_name != null ? var.databricks_catalog_name : one(setintersection(data.databricks_catalogs.workspace[0].ids, local.workspace_catalog_names))
 
   tags = merge(var.tags, {
     createdWith = "Terraform"
@@ -22,14 +29,8 @@ locals {
   })
 }
 
-resource "azurerm_resource_group" "this" {
-  name     = local.name_resource_group
-  location = var.location
-  tags     = local.tags
-
-  lifecycle {
-    ignore_changes = [tags]
-  }
+data "azurerm_resource_group" "this" {
+  name = var.resource_group_name
 }
 
 module "dbw" {
@@ -37,16 +38,64 @@ module "dbw" {
 
   name                        = local.name_dbw
   access_connector_name       = local.name_dbac
-  location                    = azurerm_resource_group.this.location
-  resource_group_name         = azurerm_resource_group.this.name
-  managed_resource_group_name = "${local.name_resource_group}-managed"
+  location                    = var.location
+  resource_group_name         = data.azurerm_resource_group.this.name
+  managed_resource_group_name = local.name_managed_resource_group
   subscription_id             = var.subscription_id
   foundry_account_id          = var.foundry_account_id
+  deployer_principal_id       = data.azurerm_client_config.current.object_id
   tags                        = local.tags
 }
 
-# Workspace catalog provisioned by automatic Unity Catalog enablement. The read waits for the workspace,
-# because the provider cannot reach a workspace that does not exist yet.
+data "databricks_current_user" "deployer" {
+  depends_on = [module.dbw]
+}
+
+resource "databricks_grant" "deployer_system_catalog" {
+  count = var.manage_system_usage_grants ? 1 : 0
+
+  catalog = "system"
+
+  principal  = data.databricks_current_user.deployer.user_name
+  privileges = ["USE_CATALOG"]
+}
+
+resource "databricks_grant" "deployer_ai_gateway_schema" {
+  count = var.manage_system_usage_grants ? 1 : 0
+
+  schema = "system.ai_gateway"
+
+  principal  = data.databricks_current_user.deployer.user_name
+  privileges = ["USE_SCHEMA"]
+
+  depends_on = [databricks_grant.deployer_system_catalog]
+}
+
+resource "databricks_grant" "deployer_ai_gateway_usage" {
+  count = var.manage_system_usage_grants ? 1 : 0
+
+  table = "system.ai_gateway.usage"
+
+  principal  = data.databricks_current_user.deployer.user_name
+  privileges = ["SELECT"]
+
+  depends_on = [databricks_grant.deployer_ai_gateway_schema]
+}
+
+data "databricks_catalogs" "workspace" {
+  count = var.databricks_catalog_name == null ? 1 : 0
+
+  depends_on = [module.dbw]
+
+  lifecycle {
+    postcondition {
+      condition     = length(setintersection(self.ids, local.workspace_catalog_names)) == 1
+      error_message = "Expected exactly one accessible workspace catalog, named after the workspace or suffixed with its numeric ID. Set databricks_catalog_name explicitly if the catalog uses another name."
+    }
+  }
+}
+
+# Resolve the accessible workspace catalog, including the numeric suffix used after a name collision.
 data "databricks_catalog" "this" {
   name = local.catalog_name
 
@@ -55,9 +104,10 @@ data "databricks_catalog" "this" {
 
 # Schema that groups the Unity Gateway objects and the inference table of the workshop.
 resource "databricks_schema" "ai_gateway" {
-  catalog_name = data.databricks_catalog.this.name
-  name         = "ai_gateway"
-  comment      = "Unity Gateway objects of the governed AI gateways workshop."
+  catalog_name  = data.databricks_catalog.this.name
+  name          = "ai_gateway"
+  comment       = "Unity Gateway objects of the governed AI gateways workshop."
+  force_destroy = true
 }
 
 # Unity Catalog service credential backed by the Access Connector managed identity. Unity Gateway obtains

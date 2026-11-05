@@ -10,7 +10,9 @@ output "name" {
 
 output "openai_v1_endpoint" {
   description = "Base URL of the OpenAI v1 API of the Foundry account, without a trailing slash."
-  value       = "https://${azurerm_cognitive_account.this.custom_subdomain_name}.openai.azure.com/openai/v1"
+  value       = "https://${azurerm_cognitive_account.this.custom_subdomain_name}.services.ai.azure.com/openai/v1"
+  ## value       = "https://${azurerm_cognitive_account.this.custom_subdomain_name}.openai.azure.com/openai/v1"
+
 }
 
 output "openai_endpoint" {

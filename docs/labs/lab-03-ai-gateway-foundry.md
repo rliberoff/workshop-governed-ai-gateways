@@ -17,8 +17,8 @@ La capa `resources` creó dos cuentas de Foundry, cada una con su proyecto y su 
 
 | Modo | Cuenta de Foundry | Proyecto | Instancia de API Management |
 | :--- | :--- | :--- | :--- |
-| Independiente | `aif-gaig-<entorno>-sa-<hash>` | `proj-gaig-<entorno>-sa` | Nueva, creada por Foundry |
-| Integrado | `aif-gaig-<entorno>-<hash>` | `proj-gaig-<entorno>` | `apim-gaig-<entorno>-<hash>`, creada por Terraform |
+| Independiente | `aif-gaig-<entorno>-sa-<sufijo>` | `proj-gaig-<entorno>-sa` | Nueva, creada por Foundry |
+| Integrado | `aif-gaig-<entorno>-<sufijo>` | `proj-gaig-<entorno>` | `apim-gaig-<entorno>-<sufijo>`, creada por Terraform |
 
 Habilitar el AI Gateway en una cuenta solo se puede hacer desde el portal de Foundry, en **Manage**, **AI Gateway**; no hay API ni plantilla documentada para ese paso. Es la única excepción del taller a la regla de no tocar el portal. El resultado, en cambio, son recursos normales de Azure: una API compartida para la cuenta, un producto y una suscripción por proyecto en API Management, y enlaces ARM que los unen con la cuenta y el proyecto. Los scripts del laboratorio los descubren siguiendo esos enlaces, sin que tengas que copiar URL ni claves.
 
@@ -30,19 +30,19 @@ Empieza por aquí: Foundry tarda entre 5 y 10 minutos en aprovisionar la nueva i
 
 1. Abre el [portal de Foundry](https://ai.azure.com) con el interruptor **New Foundry** activado.
 2. Selecciona **Manage**, **AI Gateway** y **Add AI Gateway**.
-3. Elige la cuenta `aif-gaig-<entorno>-sa-<hash>`.
+3. Elige la cuenta `aif-gaig-<entorno>-sa-<sufijo>`.
 4. Selecciona **Create new**: Foundry creará una instancia Basic v2 de API Management.
-5. Pon como nombre `aigw-gaig-<entorno>`. Es un nombre global; si está ocupado, añade tus iniciales. Si el asistente te pide un grupo de recursos, elige `rg-gaig-<entorno>`.
-6. Selecciona **Add**. Mientras el estado sea **Provisioning**, continúa con el paso 2.
+5. Pon como nombre `aigw-gaig-<entorno>-<sufijo>`, con el mismo sufijo aleatorio que el resto de tus recursos.
+6. Selecciona **Add**. Espera a que finalice el aprovisionamiento, toma unos pocos minutos.
 
 ## Paso 2: asociar el AI Gateway a tu API Management
 
 1. En **Manage**, **AI Gateway**, selecciona de nuevo **Add AI Gateway**.
-2. Elige la cuenta principal, `aif-gaig-<entorno>-<hash>`.
-3. Selecciona **Use existing** y elige `apim-gaig-<entorno>-<hash>`. Aparece en la lista porque es un tier v2 de la misma suscripción y tienes permisos sobre ella.
-4. Pon como nombre `aigw-gaig-<entorno>-integrado` y selecciona **Add**. Espera a que el estado sea **Enabled**.
-5. Selecciona el gateway y, en la lista de proyectos, elige **Add project to gateway** para `proj-gaig-<entorno>`. Los proyectos que ya existían no se añaden solos.
-6. Selecciona **Token management**, **+ Set limit**, elige el proyecto `proj-gaig-<entorno>` y el despliegue `gpt-6-luna`, escribe 5.000 tokens por minuto y selecciona **Create**.
+2. Elige la cuenta principal, `aif-gaig-<entorno>-<sufijo>`.
+3. Selecciona **Use existing** y elige `apim-gaig-<entorno>-<sufijo>`. Aparece en la lista porque es un tier v2 de la misma suscripción y tienes permisos sobre ella.
+4. Con todos los campos seleccionados dale al botón **Add**. Espera a que el estado sea **Enabled**.
+5. Selecciona el gateway y, en la lista de proyectos, elige **Add project to gateway** para `proj-gaig-<entorno>`. A veces los proyectos que ya existían no se añaden solos, y es necesario añadirlos manualmente.
+6. Selecciona **Token management**, **+ Set limit**, elige el proyecto `proj-gaig-<entorno>` y el despliegue `gpt-6-luna`, escribe 500 (menos que los que tiene la política del APIM) tokens por minuto y selecciona **Create**.
 
 Comprueba qué ha creado Foundry en tu instancia:
 
@@ -61,20 +61,14 @@ uv run python -m workshop.lab03_foundry_gateway rafaga --modo integrado --petici
 
 Tras varias peticiones aparecen respuestas `429`. El límite lo definiste en Foundry, por proyecto, y lo aplica tu instancia de API Management.
 
-Por último, comprueba que Terraform y Foundry no se pisan:
-
-```powershell
-azd provision resources --preview
-```
-
-Terraform solo gestiona lo que declara, así que la vista previa no debería proponer cambios por lo que creó Foundry. Si propone alguno, revísalo antes de aplicar nada: lo que creó Foundry se gestiona desde Foundry.
+> Importante: Terraform solo gestiona lo que declara, así que la vista previa no debería proponer cambios por lo que creó Foundry. Si propone alguno, revísalo antes de aplicar nada: lo que creó Foundry se gestiona desde Foundry. Por facilidad, este taller ofrece mecanismos de limpieza completa para Foundry a través de scripts en Python que se ejecutan como *hooks* antes y después de destruir la infraestructura.
 
 ## Paso 3: completar el modo independiente
 
-Cuando el gateway `aigw-gaig-<entorno>` esté **Enabled**:
+Cuando el gateway `aigw-gaig-<entorno>-<sufijo>` esté **Enabled**:
 
 1. Añade el proyecto `proj-gaig-<entorno>-sa` con **Add project to gateway**.
-2. En **Token management**, fija 5.000 tokens por minuto para ese proyecto y su despliegue `gpt-6-luna`.
+2. En **Token management**, fija 1.000 tokens por minuto para ese proyecto y su despliegue `gpt-6-luna`.
 3. Ejecuta los mismos comandos con el otro modo:
 
 ```powershell
@@ -101,10 +95,6 @@ Reflexiona con tu compañero o compañera:
 1. ¿Quién debería ser dueño de la instancia de API Management en tu organización?
 2. En el modo integrado, una misma instancia tiene objetos de Terraform y objetos de Foundry. ¿Qué regla pondrías para que nadie gestione un mismo objeto desde dos sitios?
 3. ¿Qué ganas y qué pierdes si los equipos de Foundry crean sus propios gateways independientes?
-
-## Limpieza del laboratorio
-
-Antes de eliminar el entorno, en **Manage**, **AI Gateway**, quita los proyectos de los dos gateways y elimina ambos gateways, como recomienda la documentación de Foundry. Al eliminar la capa `resources`, `azd down resources` borra el grupo de recursos completo, incluida la instancia creada por Foundry si está en `rg-gaig-<entorno>`. Si Foundry la creó en otro grupo de recursos, elimínala tú.
 
 ## Lo que te llevas
 
