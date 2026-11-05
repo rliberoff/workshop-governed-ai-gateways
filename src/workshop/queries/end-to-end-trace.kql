@@ -1,0 +1,7 @@
+// Every span of one distributed trace: the client span of the lab script and the gateway request share
+// the same OperationId thanks to W3C trace context propagation. The script replaces the trace ID below.
+let trace_id = "{trace_id}";
+union AppRequests, AppDependencies
+| where TimeGenerated > ago(1h) and OperationId == trace_id
+| project TimeGenerated, Type, AppRoleName, Name, DurationMs, ResultCode, Success, Id, ParentId
+| order by TimeGenerated asc

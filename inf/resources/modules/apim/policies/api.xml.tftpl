@@ -1,0 +1,45 @@
+<policies>
+  <!--
+    API-level policy for the Microsoft Foundry OpenAI v1 API.
+    - Optionally screens every prompt with Azure AI Content Safety and Prompt Shields.
+    - Emits Total, Prompt and Completion Tokens metrics to Application Insights, split by subscription,
+      product and API, with the built-in llm-emit-token-metric policy.
+    - Replaces the caller credential (API Management subscription key) with a Microsoft Entra ID token
+      of the gateway managed identity, so consumers never hold a Foundry credential.
+    - Retries throttled or failed calls; the backend circuit breaker stops retries when Foundry keeps failing.
+  -->
+  <inbound>
+    <base />
+%{ if content_safety_enabled ~}
+    <llm-content-safety backend-id="${content_safety_backend_id}" shield-prompt="true">
+      <categories output-type="EightSeverityLevels">
+%{ for name, threshold in content_safety_thresholds ~}
+        <category name="${name}" threshold="${threshold}" />
+%{ endfor ~}
+      </categories>
+    </llm-content-safety>
+%{ endif ~}
+    <llm-emit-token-metric namespace="${token_metric_namespace}">
+      <dimension name="Subscription ID" />
+      <dimension name="Product ID" />
+      <dimension name="API ID" />
+    </llm-emit-token-metric>
+    <set-backend-service backend-id="${foundry_backend_id}" />
+    <authentication-managed-identity resource="https://cognitiveservices.azure.com" output-token-variable-name="managed-id-access-token" ignore-error="false" />
+    <set-header name="Authorization" exists-action="override">
+      <value>@("Bearer " + (string)context.Variables["managed-id-access-token"])</value>
+    </set-header>
+    <set-header name="api-key" exists-action="delete" />
+  </inbound>
+  <backend>
+    <retry condition="@(context.Response.StatusCode == 429 || context.Response.StatusCode >= 500)" count="2" interval="2" first-fast-retry="false">
+      <forward-request buffer-request-body="true" />
+    </retry>
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>

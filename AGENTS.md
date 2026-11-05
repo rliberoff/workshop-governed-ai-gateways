@@ -12,7 +12,7 @@ Apply the first source that resolves the question, and never silently override a
 | :--- | :--- | :--- |
 | 1 | A direct, explicit user directive | Overrides everything below, by rule 1 of the Copilot instructions |
 | 3 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Interaction style, language policy, code generation and modification philosophy |
-| 4 | [`.github/instructions/`](.github/instructions/) | Scoped rules, applied according to their `applyTo` glob |
+| 4 | [`.github/instructions/`](.github/instructions/) | When available, provides scoped rules, applied according to their `applyTo` glob |
 | 5 | `.agents/skills/<skill_name>/SKILL.md` | Domain conventions, applied when the skill description matches the task |
 | 6 | This file | Orientation and repository facts only |
 
@@ -26,54 +26,51 @@ If two applicable sources conflict, or one cannot be loaded, stop the affected w
 | [`.apm/skills/`](.apm/skills/) | Skills authored in this repository. Edit them here |
 | [`.github/`](.github/) | GitHub repository-specific configurations, Copilot instructions, scoped instruction files, custom agents, skills and more |
 | `apm_modules/` | APM package cache. Ignored by Git |
-| [`inf/`](inf/) | Terraform IaC roots for the developer DEV bootstrap: `backend/` creates the state foundation; `resources/` creates the project resource group with per-environment remote state |
+| [`docs/`](docs/) | Workshop material in Spanish: preparation, concepts, lab guides, integrated architecture and instructor guide |
+| [`inf/`](inf/) | Terraform IaC roots: `backend/` creates the state foundation; `resources/` creates the governed AI gateway with per-environment remote state; `databricks/` optionally adds Azure Databricks with Unity Gateway |
+| [`src/workshop/`](src/workshop/) | Python lab scripts, KQL queries and evaluation data, managed with `uv` from the root [`pyproject.toml`](pyproject.toml) and [`uv.lock`](uv.lock) |
 
 ## Infrastructure as Code — Terraform
 
-The current bootstrap has two Terraform roots: `backend` creates the remote-state foundation, and `resources` creates the project's resources using per-environment remote state. Follow the Terraform source and `azure.yaml` to determine what `azd` will provision; do not mistake the target solution architecture below for resources already deployed by this bootstrap.
+The workshop has three Terraform roots: `backend` creates the remote-state foundation, `resources` creates the governed AI gateway resources, and the optional `databricks` root adds Azure Databricks with Unity Gateway in front of the same Foundry deployment. Both `resources` and `databricks` use per-environment remote state. Follow the Terraform source and `azure.yaml` to determine what `azd` will provision.
 
-No resource is created or modified from the Azure portal. Manual Terraform runs use local,
+No resource is created or modified from the Azure portal. The only exception, decided by the repository
+owner, is lab 3: enabling the Foundry AI Gateway on a Foundry account is documented only in the Foundry
+portal, so attendees associate it there, standalone on the second Foundry account and integrated with the
+Terraform API Management instance. Terraform never declares the objects that Foundry creates, and code never
+changes them. Manual Terraform runs use local,
 unversioned `terraform.tfvars`; `azd` supplies environment-specific values from the selected local
 `.azure/` environment. Neither source of environment configuration belongs in Git.
 
-The target solution deployment must also grant the solution identity its data roles and grant the
-deployer the data-plane permissions needed to write secrets and configuration keys. Contributor
-alone is not enough, because it cannot assign roles.
+The deployment grants every managed identity its data roles and grants the deployer the data-plane
+roles the labs need (Foundry User, Log Analytics Reader, Monitoring Metrics Publisher). Contributor
+alone is not enough, because it cannot assign roles. Role assignments use built-in role definition IDs,
+because Foundry roles were renamed recently.
 
 ### Structure
 
 | Folder | Purpose |
 | :--- | :--- |
-| `backend/` | **Stage 1**. Creates the Terraform remote state resource group, storage account, private blob container, and caller-scoped blob data role assignment. Its state is local and **must not** be committed. |
-| `resources/` | **Stage 2**. Creates the project's resources using per-environment remote state. |
+| `backend/` | **Stage 1**. Creates the Terraform remote state resource group, storage account without shared keys, private blob container, and caller-scoped blob data role assignment. Its state is local and **must not** be committed. |
+| `resources/` | **Stage 2**. Creates the governed AI gateway resources using per-environment remote state. |
+| `databricks/` | **Optional stage 3**. Creates a Premium Databricks workspace, an Access Connector and the Unity Catalog objects of Unity Gateway, using per-environment remote state. |
 
-### Target solution modules
+### Modules
 
-The target solution architecture assigns each module its resource, diagnostic settings against the shared workspace, and required role assignments. These modules and their planned providers are not present in the current bootstrap; check the constraints in each Terraform root before changing providers.
+Each module owns its resource, its diagnostic settings and the role assignments of its identity. Module folders use the Azure abbreviation of their main resource.
 
-| Module | Resource |
-| :--- | :--- |
-| `mi` | User-assigned managed identity |
-| `log` | Log Analytics Workspace |
-| `appi` | Application Insights |
-| `kv` | Key Vault with RBAC authorization |
-| `appcs` | App Configuration |
-| `st` | Storage account |
-| `acr` | Container Registry |
-| `ais` | `AIServices` account with project, model deployment, and content filtering policy corresponding to a Microsoft Foundry tools (milto-service account) instance |
-| `app` | A web application hosting both the frontend and backend components of the solution |
-| `asp` | The App Service Plan for hosting the web application |
-| `srch` | Azure AI Search (a.k.a. Foundry IQ) |
-| `vnet` | Virtual network |
-| `snet` | Subnet within the virtual network |
-| `nsg` | Network security group |
-| `dns` | DNS (private) zone |
-| `pep` | Private endpoint within the virtual network |
-| `di` | Document Intelligence |
+| Root | Module | Resource |
+| :--- | :--- | :--- |
+| `resources` | `log` | Log Analytics workspace shared by gateway logs and Application Insights |
+| `resources` | `appi` | Workspace-based Application Insights with local authentication disabled |
+| `resources` | `aif` | Foundry account (`AIServices`) with project, model deployment and Application Insights connections; instantiated twice, for the main account and for the standalone AI Gateway account of lab 3 |
+| `resources` | `cs` | Azure AI Content Safety account used by the `llm-content-safety` policy |
+| `resources` | `apim` | API Management v2 instance with the OpenAI v1 API, backends, policies, products, subscriptions and logging |
+| `databricks` | `dbw` | Databricks workspace, Access Connector and its role on the Foundry account |
 
 ### Tagging
 
-All resources carry the tags from `local.tags`: `createdWith`, `createdAt`, `project`, and `environment`.
+All resources carry the tags from `local.tags`: `createdWith`, `createdAt`, `project`, `environment` and `owner`.
 
 `createdAt` is recalculated on every run by design. That is why every tagged resource declares
 `lifecycle { ignore_changes = [tags] }`: without it, every `plan` would propose unrelated changes.
@@ -82,11 +79,11 @@ All resources carry the tags from `local.tags`: `createdWith`, `createdAt`, `pro
 
 | Component | Version | Why |
 | :--- | :--- | :--- |
-| Terraform | `>= 1.16.5` | Both current Terraform roots declare this minimum |
-| `azurerm` | `~> 5.9.0` | The backend root uses this constraint; check the resources root for its exact pin |
-| `azuread` | `~> 3.10.0` | Planned for app registrations and Graph role assignment |
-| `azapi` | `~> 2.13.0` | Planned fallback for resources not supported directly by `azurerm` |
-| `random` | `~> 3.9.1` | Planned stable identifier for the API scope |
+| Terraform | `>= 1.16.5` | Every Terraform root declares this minimum |
+| `azurerm` | `~> 5.9.0` | Every Terraform root uses this constraint |
+| `azapi` | `~> 2.13.0` | The `resources` root uses it for properties that `azurerm` does not expose; every use is commented |
+| `databricks` | `~> 1.137.0` | The `databricks` root uses this verified partner provider for Unity Catalog and Unity Gateway objects |
+| Python | `>= 3.11, < 3.14` | PyRIT, used by the AI Red Teaming Agent, does not support Python 3.14 |
 
 A provider is declared only when something consumes it, never “just in case”.
 
@@ -97,12 +94,13 @@ A provider is declared only when something consumes it, never “just in case”
 | Terraform 1.16.5 or later | `terraform version` |
 | Azure CLI 2.91.0 or later, authenticated to the target subscription | `az account show` |
 | Azure Developer CLI 1.36.0 or later | `azd version` |
+| Python 3.11 to 3.13 and uv 0.10 or later, for the lab scripts | `uv --version` |
 
 ## Local provisioning with `azd`
 
 `azd` runs locally on the developer workstation but provisions resources in Azure. Local provisioning is limited to the caller's isolated environment; it must not target shared, client, or PRO environments.
 
-The root [`azure.yaml`](azure.yaml) selects Terraform and defines two provisioning layers: `backend` (`./inf/backend`) followed by `resources` (`./inf/resources`), which depends on `backend`. `azd provision` orchestrates the Terraform roots. It can target a layer by name; without a layer name, it provisions all configured layers in dependency order. The `resources` layer's [`provider.conf.json`](inf/resources/provider.conf.json) uses the backend layer's outputs and `AZURE_ENV_NAME` to configure its remote state.
+The root [`azure.yaml`](azure.yaml) selects Terraform and defines three provisioning layers: `backend` (`./inf/backend`), `resources` (`./inf/resources`), which depends on `backend`, and the optional `databricks` (`./inf/databricks`), which depends on `resources`. `azd provision` orchestrates the Terraform roots. It can target a layer by name; without a layer name, it provisions all configured layers in dependency order, including the optional one, so the workshop always names the layer. The [`provider.conf.json`](inf/resources/provider.conf.json) of the `resources` and `databricks` layers uses the backend layer's outputs and `AZURE_ENV_NAME` to configure their remote state. Each layer's `main.tfvars.json` maps azd environment values to Terraform variables, and UPPER_CASE Terraform outputs become azd environment values; no output carries a secret.
 
 Before using `azd`, verify its version and authenticate Terraform through Azure CLI. Terraform's Azure provider uses the Azure CLI identity; `azd auth login` alone does not authenticate Terraform.
 

@@ -481,6 +481,16 @@ terraform.tfvars
 .azure/
 
 ##################################################################################
+# Following settings are for the Python lab scripts managed with uv.
+##################################################################################
+
+# uv virtual environment
+.venv/
+
+# Local output of the AI Red Teaming Agent scans
+red-team-results/
+
+##################################################################################
 # Following settings are for Microsoft Agent Package Manager (APM)
 # Reference: https://microsoft.github.io/apm/consumer/install-packages/#what-to-commit
 ##################################################################################

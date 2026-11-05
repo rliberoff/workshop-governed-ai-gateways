@@ -1,0 +1,9 @@
+// Token usage per API Management subscription and product in the last hour. The built-in llm-emit-token-metric
+// policy publishes Prompt, Completion and Total Tokens as Application Insights custom metrics, stored in the
+// AppMetrics table of the workspace with the policy dimensions in Properties.
+AppMetrics
+| where TimeGenerated > ago(1h) and Name in ("Prompt Tokens", "Completion Tokens", "Total Tokens")
+| extend SubscriptionId = tostring(Properties["Subscription ID"]), ProductId = tostring(Properties["Product ID"])
+| summarize Tokens = sum(Sum) by SubscriptionId, ProductId, Name
+| evaluate pivot(Name, sum(Tokens))
+| order by SubscriptionId asc

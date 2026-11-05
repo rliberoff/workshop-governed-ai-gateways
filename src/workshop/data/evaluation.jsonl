@@ -1,0 +1,8 @@
+{"query": "¿Qué es un AI gateway?", "ground_truth": "Un AI gateway es un punto de entrada centralizado que gobierna el acceso a los modelos de IA: autentica, aplica cuotas de tokens, filtra contenido y registra el uso."}
+{"query": "¿Para qué sirve una cuota de tokens por minuto?", "ground_truth": "Sirve para limitar el consumo de cada consumidor y evitar que una aplicación agote la capacidad del modelo que comparten otras."}
+{"query": "¿Qué ventaja tiene usar identidades administradas para llamar a un modelo?", "ground_truth": "Evita gestionar claves: el servicio obtiene tokens de Microsoft Entra ID de corta duración y los permisos se controlan con RBAC."}
+{"query": "¿Qué es Prompt Shields?", "ground_truth": "Es una capacidad de Azure AI Content Safety que detecta intentos de jailbreak y ataques indirectos en los prompts."}
+{"query": "¿Qué es el red teaming de IA?", "ground_truth": "Es la práctica de atacar de forma controlada un sistema de IA para descubrir riesgos de seguridad y contenido dañino antes de producción."}
+{"query": "¿Qué mide la evaluación de coherencia?", "ground_truth": "Mide si la respuesta tiene un flujo lógico y unas ideas bien organizadas en relación con la pregunta."}
+{"query": "¿Por qué propagar el contexto de traza W3C?", "ground_truth": "Para que la aplicación, el gateway y el modelo compartan un mismo identificador de traza y se pueda seguir una petición de extremo a extremo."}
+{"query": "¿Qué es Unity Gateway en Databricks?", "ground_truth": "Es la solución de gobierno de IA de Databricks basada en Unity Catalog que controla el acceso, enruta el tráfico, aplica límites y registra la actividad de modelos y servidores MCP."}

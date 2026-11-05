@@ -1,0 +1,21 @@
+<policies>
+  <!--
+    Product-level policy. When enabled, llm-token-limit enforces a token rate (429 Too Many Requests) and a
+    token quota (403 Forbidden) per subscription, and returns the remaining budget in response headers.
+  -->
+  <inbound>
+    <base />
+%{ if token_limit_enabled ~}
+    <llm-token-limit counter-key="@(context.Subscription.Id)" tokens-per-minute="${tokens_per_minute}" token-quota="${token_quota}" token-quota-period="${token_quota_period}" estimate-prompt-tokens="false" remaining-tokens-header-name="x-ratelimit-remaining-tokens" remaining-quota-tokens-header-name="x-quota-remaining-tokens" tokens-consumed-header-name="x-tokens-consumed" />
+%{ endif ~}
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>
